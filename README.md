@@ -21,7 +21,7 @@ For spinning up instances automatically with AWS completely configured and set u
 - Set up of useful BASH Aliases for working with the command line
 - Enable autocompletion of Kubectl
 - Installation of Dynatrace ActiveGate and configuration of [Cluster](https://www.dynatrace.com/support/help/technology-support/cloud-platforms/kubernetes/monitoring/connect-kubernetes-clusters-to-dynatrace/) and [Workload monitoring](https://www.dynatrace.com/support/help/technology-support/cloud-platforms/kubernetes/monitoring/monitor-workloads-kubernetes/)
-- Installation of Istio 1.5.1 
+- Installation of Istio 1.9.1 
 - Installation of Helm Client
 - Enabling own Docker Registry for the Cluster
 - Convert the public IP in a (magic) domain ([nip.io](https://nip.io/)) for being able to expose all the needed services with subdomains.
@@ -35,6 +35,7 @@ For spinning up instances automatically with AWS completely configured and set u
 - Deployment of a cartsloadgenerator PoD
 - Deployment of a Autonomous Cloud teaser home page with links to the pipeline, kubernetes api, keptn-bridge, keptn-api, jenkins 
 - Creation of valid SSL certificates for the exposed endpoints with Certmanager and HTTPs Let's encrypt.
+- Gitea for hosting own git repositories
 - Create a user account and copy the standard user (ubuntu on this case) with his own home directory (a replica) and allowing SSH connections with text password. Useful for spinning an army of workshop clusters. 
 
 ### 💻The Keptn-in-a-Box Bash installation
@@ -59,7 +60,7 @@ For spinning up instances automatically with AWS completely configured and set u
 
 
 ## 📚Tutorial
-For a step by step understanding of how Keptn-in-a-Box works and how to use it, take a look at the Keptn in a Box tutorial [https://tutorials.keptn.sh/tutorials/keptn-in-a-box/)](https://tutorials.keptn.sh/tutorials/keptn-in-a-box-07)
+For a step by step understanding of how Keptn-in-a-Box works and how to use it, take a look at the Keptn in a Box tutorial [https://tutorials.keptn.sh/tutorials/keptn-in-a-box/)](https://tutorials.keptn.sh/tutorials/keptn-in-a-box-08)
 
 
 ## Prerequisites
@@ -80,11 +81,12 @@ For a step by step understanding of how Keptn-in-a-Box works and how to use it, 
   ├── cartsloadgenerator    Sources of the load container of the carts app 
   ├── demo                  Scripts for Onboarding the Carts app  
   ├── dynatrace             Scripts for integrating with Dynatrace
+  ├── gitea                 Scripts for migrating and creating repositories in own GIT Server  
   ├── homepage              Sources of the homepage for displaying the Autonomous Cloud teaser  
   ├── ingress               Files and logic for mapping, exposing the endpoints and services. Creation of Certificates.  
   ├── jenkins               Deployment and configuration for Jenkins managed as code.
   ├── misc                  Miscelaneous (patch kubernetes dashboard)
-  └── virtualservices       YAML files for virtualservices 
+  └── istio                 YAML files for istio configuration 
 ```
 
 ## 💾 Sizing
@@ -131,21 +133,20 @@ The minimum required for running the default modules is t2.large with 13 Gigs of
 #### 2. Clone the repo and navigate to the directory
 
 ```bash
-git clone https://github.com/keptn-sandbox/keptn-in-a-box ; cd keptn-in-a-box
+curl -O https://raw.githubusercontent.com/keptn-sandbox/keptn-in-a-box/release-0.8.0/keptn-in-a-box.sh
+chmod +x keptn-in-a-box.sh
 ```
-
-> You can also specify a specific release like 'git clone --branch release-0.7.3 https://github.com/keptn-sandbox/keptn-in-a-box.git' the master branch will be pointing to the actual release.
-> Actually you only need to copy and execute the **keptn-in-a-box.sh** file. It'll take care of the rest and load the resources from github.
+> You dont need to clone all the repo, only download the **keptn-in-a-box.sh** file. When executing it, it'll take care of the rest and load the resources from github.
 
 #### 3. Execute the file with sudo rights.
 ```bash
 sudo bash -c './keptn-in-a-box.sh &'
 ```
-And that was it! Yes that easy!  Now if you notice is that there is an & in the command. This command will run installation in a bash shell as sudo, will prompt you for the password and will send the job to the background. You will not see any output since stdout and stderr are piped to a logfile which is located by default in **/tmp/install.log** 
+And that was it! Yes that easy!  Now if you notice is that there is an & in the command. This command will run installation in a bash shell as sudo, will prompt you for the password and will send the job to the background. You will not see any output since stdout and stderr are piped to a logfile which is located by default in **/tmp/kiab-install.log** 
 
 For inspecting the installation on realtime type:
 ```bash
-less +F /tmp/install.log
+less +F /tmp/kiab-install.log
 ```
 
 #####  The installed modules
@@ -167,9 +168,8 @@ The default installation is **installationBundlesDefault** which sets the contro
   resources_route_istio_ingress=true
   dynatrace_savecredentials=true
   dynatrace_configure_monitoring=true
-  dynatrace_activegate_install=true
-  dynatrace_configure_workloads=true
-  keptn_bridge_eap=true
+
+
   keptndemo_teaser_pipeline=true
   keptndemo_cartsload=true
   keptndemo_unleash=true
@@ -344,7 +344,7 @@ At the begining of the  `functions.sh` file the installation modules are listed.
 To Inspect do 
 
 ```bash
-less +F /tmp/install.log
+less +F /tmp/kiab-install.log
 ```
 and to have a verbose output (of every executed command) set the following control flag `verbose_mode=true` 
 
